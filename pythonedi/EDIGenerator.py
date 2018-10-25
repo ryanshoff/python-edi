@@ -3,6 +3,8 @@ Parses a provided dictionary set and tries to build an EDI message from the data
 Provides hints if data is missing, incomplete, or incorrect.
 """
 
+import pprint
+
 from .supported_formats import supported_formats
 from .debug import Debug
 
@@ -12,6 +14,9 @@ class EDIGenerator(object):
         self.element_delimiter = "^"
         self.segment_delimiter = "\n"
         self.data_delimiter = "`"
+        #self.interchange_control_number = 1
+        #self.group_control_number = 1
+        #self.transaction_control_number = 1
 
     def build(self, data):
         """
@@ -30,10 +35,22 @@ class EDIGenerator(object):
             ))
         edi_format = supported_formats[ts_id]
 
-        output_segments = []
+        #print(edi_format) # RJS
+        pp = pprint.PrettyPrinter(indent=4)
+        #pp.pprint(edi_format)
+        output_segments = self.recursive_build(data, edi_format)
+        print(output_segments)
+        return self.segment_delimiter.join(output_segments)
 
+    def recursive_build(self, data, edi_format):
+        pp = pprint.PrettyPrinter(indent=4)
+        print('recursive_build')
+        pp.pprint(data)
+        pp.pprint(edi_format)
+        output_segments = []
         # Walk through the format definition to compile the output message
         for section in edi_format:
+            pp.pprint(section)
             if section["type"] == "segment":
                 if section["id"] not in data:
                     if section["req"] == "O":
@@ -60,24 +77,34 @@ class EDIGenerator(object):
                     raise ValueError("Loop '{}' has {} segments (max {})".format(section["id"], len(section["segments"]), section["repeat"]))
                 # Iterate through and build segments in loop
                 for iteration in data[section["id"]]:
-                    for segment in section["segments"]:
-                        if segment["id"] not in iteration:
-                            if segment["req"] == "O":
-                                # Optional segment is missing - that's fine, keep going
-                                continue
-                            elif segment["req"] == "M":
-                                # Mandatory segment is missing - explain loop and then fail
-                                Debug.explain(section)
-                                raise ValueError("EDI data in loop '{}' is missing mandatory segment '{}'.".format(section["id"], segment["id"]))
-                            else:
-                                raise ValueError("Unknown 'req' value '{}' when processing format for segment '{}' in set '{}'".format(segment["req"], segment["id"], ts_id))
-                        output_segments.append(self.build_segment(segment, iteration[segment["id"]]))
+                    pp.pprint(iteration)
+                    pp.pprint(section["segments"])
+                    output_segments.extend(self.recursive_build(iteration,section["segments"]))
+                #for iteration in data[section["id"]]:
+                #    for segment in section["segments"]:
+                #        #print("segment " + str(segment)) #RJS
+                #        if segment["id"] not in iteration:
+                #            if segment["req"] == "O":
+                #                # Optional segment is missing - that's fine, keep going
+                #                continue
+                #            elif segment["req"] == "M":
+                #                # Mandatory segment is missing - explain loop and then fail
+                #                Debug.explain(section)
+                #                raise ValueError("EDI data in loop '{}' is missing mandatory segment '{}'.".format(section["id"], segment["id"]))
+                #            else:
+                #                raise ValueError("Unknown 'req' value '{}' when processing format for segment '{}' in set '{}'".format(segment["req"], segment["id"], ts_id))
+                #        pp.pprint(segment)
+                #        pp.pprint(iteration[segment["id"]])
+                #        output_segments.append(self.build_segment(segment, iteration[segment["id"]]))
 
-        return self.segment_delimiter.join(output_segments)
+        return output_segments
 
     def build_segment(self, segment, segment_data):
         # Parse segment elements
         output_elements = [segment["id"]]
+        #print(segment) # RJS
+        pp = pprint.PrettyPrinter(indent=4)
+        #pp.pprint(segment)
         for e_data, e_format, index in zip(segment_data, segment["elements"], range(len(segment["elements"]))):
             output_elements.append(self.build_element(e_format, e_data))
         
@@ -157,7 +184,7 @@ class EDIGenerator(object):
                 else:
                     raise ValueError("Invalid length ({}) for time field in element '{}' in set '{}'".format(e_format["length"], element_id, ts_id))
             elif e_format["data_type"] == "R":
-                formatted_element = str(float(e_data))
+                formatted_element = str(float(e_data)).rstrip('0').rstrip('.')
             elif e_format["data_type"].startswith("N"):
                 formatted_element = "{:0{length}.{decimal}f}".format(float(e_data), length=e_format["length"]["min"], decimal=e_format["data_type"][1:])
             elif e_format["data_type"] == "ID":
