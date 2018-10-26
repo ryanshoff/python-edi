@@ -17,6 +17,45 @@ class EDIGenerator(object):
         #self.interchange_control_number = 1
         #self.group_control_number = 1
         #self.transaction_control_number = 1
+        self.hl = 0
+        self.hashvalue = 0
+        self.totalsegments = 0
+
+    def countHL(self, data):
+        count = 0
+        if data:
+            for segment, segmentlist in data.items():
+                if segment == "HL":
+                    count += 1
+                if segmentlist and isinstance(segmentlist, list):
+                    for loop in segmentlist:
+                        if loop and isinstance(loop, dict):
+                            count += self.countHL(loop)
+        return count
+
+    def countsegments(self, data):
+        count = 0
+        if data:
+            for segment, segmentlist in data.items():
+                if segmentlist and isinstance(segmentlist, list):
+                    if not segment.startswith('L_'):
+                        count += 1
+                    for loop in segmentlist:
+                        if loop and isinstance(loop, dict):
+                            count += self.countsegments(loop)
+        return count
+
+    def hashSN1(self, data):
+        qty = 0
+        if data:
+            for segment, segmentlist in data.items():
+                if segment == "SN1":
+                    qty += int(segmentlist[1].rstrip('0').replace('.','').replace(',',''))
+                if segmentlist and isinstance(segmentlist, list):
+                    for loop in segmentlist:
+                        if loop and isinstance(loop, dict):
+                            qty += self.hashSN1(loop)
+        return qty
 
     def build(self, data):
         """
@@ -35,6 +74,21 @@ class EDIGenerator(object):
             ))
         edi_format = supported_formats[ts_id]
 
+        self.hl = self.countHL(data)
+        self.hashvalue = self.hashSN1(data) % 1000
+        self.totalsegments = self.countsegments(data)
+
+        print(self.hl)
+        print(self.hashvalue)
+        print(self.totalsegments)
+
+        geelements = data["CTT"]
+        geelements[0] = str(self.hl)
+        geelements[1] = str(self.hashvalue)
+
+        seelements = data["SE"]
+        seelements[0] = self.totalsegments - 4 # don't include ISA, GS, GE, IEA
+
         #print(edi_format) # RJS
         pp = pprint.PrettyPrinter(indent=4)
         #pp.pprint(edi_format)
@@ -45,12 +99,12 @@ class EDIGenerator(object):
     def recursive_build(self, data, edi_format):
         pp = pprint.PrettyPrinter(indent=4)
         print('recursive_build')
-        pp.pprint(data)
-        pp.pprint(edi_format)
+        #pp.pprint(data)
+        #pp.pprint(edi_format)
         output_segments = []
         # Walk through the format definition to compile the output message
         for section in edi_format:
-            pp.pprint(section)
+            #pp.pprint(section)
             if section["type"] == "segment":
                 if section["id"] not in data:
                     if section["req"] == "O":
@@ -77,8 +131,8 @@ class EDIGenerator(object):
                     raise ValueError("Loop '{}' has {} segments (max {})".format(section["id"], len(section["segments"]), section["repeat"]))
                 # Iterate through and build segments in loop
                 for iteration in data[section["id"]]:
-                    pp.pprint(iteration)
-                    pp.pprint(section["segments"])
+                    #pp.pprint(iteration)
+                    #pp.pprint(section["segments"])
                     output_segments.extend(self.recursive_build(iteration,section["segments"]))
                 #for iteration in data[section["id"]]:
                 #    for segment in section["segments"]:
