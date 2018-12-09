@@ -473,6 +473,15 @@
 "data_type_ids": null,
 "length": {"min": 1, "max": 10},
 "notes": "" }
+,
+{ "id": "MEA04", 
+"type": "element", 
+"name": "",
+"req": "O",
+"data_type": "AN", 
+"data_type_ids": null,
+"length": {"min": 2, "max": 2},
+"notes": "" }
 ]
 }
 ,
@@ -1716,6 +1725,15 @@
 "data_type": "R", 
 "data_type_ids": null,
 "length": {"min": 1, "max": 10},
+"notes": "" }
+,
+{ "id": "MEA04", 
+"type": "element", 
+"name": "",
+"req": "O",
+"data_type": "AN", 
+"data_type_ids": null,
+"length": {"min": 2, "max": 2},
 "notes": "" }
 ]
 }
