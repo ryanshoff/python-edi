@@ -341,6 +341,11 @@
 ]
 }
 ,
+{   "id": "L_DTM", "type": "loop",
+"name": "Date Loop",
+"req": "O",
+"repeat": 20,
+"segments": [
 { "id": "DTM", "type": "segment",
 "name": "", 
 "req": "O",
@@ -401,6 +406,8 @@
 "data_type_ids": null,
 "length": {"min": 2, "max": 3},
 "notes": "" }
+]
+}
 ]
 }
 ,

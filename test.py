@@ -18,9 +18,9 @@ transaction_control_number = 1
 edi_data = {
     "ISA": [
         "00", # Authorization Information Qualifier
-        "", # Authorization Information
+        "           ", # Authorization Information
         "00", # Security Information Qualifier
-        "", # Security Information
+        "           ", # Security Information
         "ZZ", # Interchange Sender ID Qualifier
         "B4209T0", # Interchange Sender ID
         "ZZ", # Interchange Receiver ID Qualifier
@@ -49,20 +49,26 @@ edi_data = {
         transaction_control_number # Transaction Set Control Number
     ],
     "BSN": [
-        "00",
+        "00",  # 00 original  05 replace
         "shippernumber",
         datetime(2018, 6, 24, 10, 00), # Date
         datetime(2018, 6, 24, 10, 00), # Time
     ],
+    "L_DTM": [
+    {
     "DTM": [
-        "011", # Date/Time Qualifier: 
+        "011", # Date/Time Qualifier:  011  shipped
         datetime(2018, 6, 20, 10, 00), # Date
         datetime(2018, 6, 20, 10, 00) # Date
     ],
+    },
+    {
     "DTM": [
-        "017", # Date/Time Qualifier: 
+        "017", # Date/Time Qualifier:  017 estimaged arrival
         datetime(2018, 6, 20, 10, 00),# Date
         datetime(2018, 6, 20, 10, 00) # Date
+    ],
+    }
     ],
     "HL": [
         "1",
@@ -70,40 +76,40 @@ edi_data = {
         "S"
     ],
     "MEA": [
-        "PD",
-        "G",
-        "12345",
-        "LB"
+        "PD",  #physical dimensions
+        "G",   #gross weight
+        "12345",  #value
+        "LB"      # unit
     ],
-    "TD1": [
-        "RCK71",
-        "19"
+    "TD1": [ #carrier details
+        "RCK71",    # container
+        "19"        # qty
     ],
     "TD5": [
-        "B",
-        "2",
-        "E451",
-        "T"
+        "B",        # origin
+        "2",        # 2 SCAC code 92 Cat code
+        "E451",     # code
+        "T"         # method or type of transport
     ],
-    "REF": [
-        "CN",
+    "REF": [        # heat code could be here
+        "CN",       # pro #
         "FREIGHT COLLECT"
     ],
     "FOB": [
-        "CC"
+        "CC"        # cc collect po prepaid only pp prepaid (by seller)
     ],
     "L_N1": [
         {
             "N1": [
-                "SF", # Entity Identifier Code: 
+                "SF", # ship from
                 None, # Name
                 "16", # ID Code Qualifier: Assigned by seller
-                "61548-0650" # ID number
+                "61548" # ID number
             ],
         },
         {
             "N1": [
-                "SU", # Entity Identifier Code: 
+                "SU", # supplier
                 None, # Name
                 "91", # ID Code Qualifier: Assigned by seller
                 "US" # ID number
@@ -111,7 +117,7 @@ edi_data = {
         },
         {
             "N1": [
-                "SF", # Entity Identifier Code: 
+                "SF", # ship from
                 None, # Name
                 "92", # ID Code Qualifier: Assigned by seller
                 "A12340" # ID number
@@ -121,45 +127,45 @@ edi_data = {
     "L_HL": [
         {
             "HL": [ 
-                "2", 
-                "1",
-                "I",
+                "2",    # hl number
+                "1",    # parent
+                "I",   # item
             ],
             "LIN": [
                 None,
                 "BP",
-                "2762414",
-                "CH",
+                "2762414",  # buyer's part number
+                "CH",    # country of origin
                 "US",
-                "EC",
+                "EC",    # ec
                 "04"
             ],
             "SN1": [
                 None,
-                "285",
-                "EA"
+                "285",  # qty
+                "EA"    # uom
             ],
             "PRF": [
-                "55500012345",
+                "55500012345",   # po
                 None,
                 None,
                 None,
-                "1"
+                "1"             # po line number
             ],
             "REF": [
                 "PK",
-                "S0073885",
+                "S0073885",      # packing list number
             ],
             "CLD": [
-                "19",
-                "15",
-                "RCK71",
+                "19",       # number of containers
+                "15",       # qty in one container
+                "RCK71",    # container code
             ],
             "L_REF2": [
                 {
                     "REF": [
                         "LS",
-                        "123434354"
+                        "123434354"   # container barcode
                     ],
                 },
                 {
@@ -180,11 +186,11 @@ edi_data = {
         transaction_control_number
     ],
     "GE": [
-        "0",
+        "1",
         group_control_number
     ],
     "IEA": [
-        "0",
+        "1",
         interchange_control_number
     ],
 }
